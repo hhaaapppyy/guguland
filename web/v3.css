@@ -10,3 +10,12 @@ body{overflow:hidden;background:#dad1be}body>header{position:fixed;inset:0 0 aut
  .record-song h3{cursor:pointer}.record-song h3:focus{outline:2px solid #b9a987;outline-offset:4px}.record-song audio{display:block;width:100%;margin-top:12px}.record-song .small-note{margin-bottom:0}
 .want-you{position:fixed;z-index:30;pointer-events:none;color:#9a725e;background:#fff8e8e8;border:1px solid #ead5b7;border-radius:999px;padding:7px 14px;font:500 clamp(15px,2.8vw,24px)/1.2 "STKaiti","KaiTi","Microsoft YaHei",serif;letter-spacing:1px;box-shadow:0 5px 18px #876b4b22;animation:want-you-float 10s ease-out forwards;transform:rotate(var(--tilt,-2deg))}@keyframes want-you-float{0%{opacity:0;transform:translateY(14px) rotate(var(--tilt,-2deg)) scale(.92)}10%{opacity:1;transform:translateY(0) rotate(var(--tilt,-2deg)) scale(1)}76%{opacity:1}100%{opacity:0;transform:translateY(-42px) rotate(var(--tilt,-2deg)) scale(1.02)}}
 
+
+/* Gentle visiting animals and penguin moments. */
+.visitor{filter:drop-shadow(0 4px 4px #6b574222)}
+.penguin-wave .gugu-wing:first-of-type{animation:penguin-wave 1.8s ease-in-out}
+.penguin-hop{animation:penguin-hop 1.2s ease-in-out}
+.penguin-blink .eye{animation:penguin-blink .22s steps(2) 2}
+@keyframes penguin-wave{0%,100%{transform:rotate(0)}45%{transform:rotate(-12deg) translateY(-4px)}75%{transform:rotate(6deg)}}
+@keyframes penguin-hop{0%,100%{transform:translateY(0)}35%{transform:translateY(-13px) rotate(-2deg)}70%{transform:translateY(0) rotate(2deg)}}
+@keyframes penguin-blink{0%,100%{transform:scaleY(1)}50%{transform:scaleY(.12)}}
