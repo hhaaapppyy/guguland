@@ -45,3 +45,16 @@ body{overflow:hidden;background:#dad1be}body>header{position:fixed;inset:0 0 aut
 
 /* Pets follow the penguin smoothly while it is dragged around the room. */
 .cat.pet-following,.dog.pet-following{transition:left .22s linear,top .22s linear,transform .3s ease,filter .3s ease;z-index:7}
+
+
+/* A page-turning pocket notebook with clear keep / navigation / tear-off zones. */
+.notebook{display:block;width:100%;min-height:260px;box-sizing:border-box;padding:18px 20px;border:1px solid #e6dcc9;border-radius:12px;background:repeating-linear-gradient(to bottom,#fffdf8 0,#fffdf8 31px,#e8dfd0 32px);line-height:32px;resize:vertical;outline:none;font:15px/32px cursive;color:#73654f;}
+.notebook-actions{display:grid;grid-template-columns:minmax(120px,1fr) auto minmax(90px,1fr);align-items:center;gap:12px;margin-top:16px}
+.notebook-actions>.sheet-button:first-child{justify-self:start}.notebook-actions>.sheet-button:last-child{justify-self:end}
+.notebook-nav{display:flex;align-items:center;justify-content:center;gap:10px;white-space:nowrap}
+.notebook-page-label{min-width:74px;text-align:center;color:#8c7c62;font-size:13px;font-variant-numeric:tabular-nums}
+.notebook-turn{padding-inline:12px!important}
+.notebook-actions button:disabled{opacity:.42;cursor:default}
+.cat.pet-dragging,.dog.pet-dragging{transition:none!important;animation:none!important;touch-action:none;z-index:12;pointer-events:auto}
+.cat.pet-dragging.pet-walk,.dog.pet-dragging.pet-walk,.cat.pet-dragging.pet-home,.dog.pet-dragging.pet-home{left:var(--pet-x);top:var(--pet-y)}
+@media(max-width:640px){.notebook-actions{grid-template-columns:1fr auto 1fr;gap:5px}.notebook-actions .sheet-button{padding:10px 9px;font-size:13px}.notebook-nav{gap:4px}.notebook-page-label{min-width:52px;font-size:11px}.notebook-turn{padding-inline:7px!important}}
