@@ -46,7 +46,7 @@ async function recordSheet(){
  }
  for(const entry of records.filter(e=>!window.GUGU_SONGS.includes(e.title)))renderEntry(entry,content);
 }
-gugu.addEventListener('pointerup',()=>{tone(180,.08);if(random()<.8)penguinMoment()});
+gugu.addEventListener('pointerup',()=>{tone(180,.08);if(!room.classList.contains('sleeping')){gugu.classList.remove('penguin-hop');void gugu.offsetWidth;gugu.classList.add('penguin-hop');setTimeout(()=>gugu.classList.remove('penguin-hop'),1200)}if(random()<.8)penguinMoment()});
 function db(){return new Promise((resolve,reject)=>{const request=indexedDB.open('gugu-local',1);request.onupgradeneeded=()=>request.result.createObjectStore('photos');request.onsuccess=()=>resolve(request.result);request.onerror=()=>reject(request.error)})}
 async function photoStore(value,read=false){const database=await db();return new Promise((resolve,reject)=>{const tx=database.transaction('photos',read?'readonly':'readwrite');const store=tx.objectStore('photos');const request=read?store.get('frame'):value?store.put(value,'frame'):store.delete('frame');request.onsuccess=()=>{const result=request.result;tx.oncomplete=()=>{database.close();resolve(result)}};request.onerror=()=>reject(request.error)})}
 let photoUrl=null;function renderPhoto(blob){if(photoUrl)URL.revokeObjectURL(photoUrl);photo.innerHTML='';if(blob){photoUrl=URL.createObjectURL(blob);const img=element('img');img.src=photoUrl;img.alt='自己的照片';photo.append(img)}else photo.append(element('div','photo-empty','⌁'))}photoStore(null,true).then(renderPhoto).catch(()=>{});
