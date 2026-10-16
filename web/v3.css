@@ -44,4 +44,4 @@ body{overflow:hidden;background:#dad1be}body>header{position:fixed;inset:0 0 aut
 .cat.pet-walk,.dog.pet-walk{transition:left .85s cubic-bezier(.2,.75,.25,1),top .85s cubic-bezier(.2,.75,.25,1),transform .55s ease,filter .55s ease;animation:pet-step .35s ease-in-out 3}
 
 /* Pets follow the penguin smoothly while it is dragged around the room. */
-.cat.pet-following,.dog.pet-following{transition:left .22s linear,top .22s linear,transform .3s ease,filter .3s ease;animation:pet-step .42s ease-in-out infinite;z-index:7}
+.cat.pet-following,.dog.pet-following{transition:left .22s linear,top .22s linear,transform .3s ease,filter .3s ease;z-index:7}
