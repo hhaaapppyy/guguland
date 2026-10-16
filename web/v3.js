@@ -71,7 +71,7 @@ function visitor(){const v=element('span','visitor');v.setAttribute('aria-hidden
 ];v.innerHTML=animals[kind];if(kind===0){v.style.top='83%';v.style.left='18%'}else if(kind===1){v.style.top='62%';v.style.left='8%'}else if(kind===2){v.style.top='51%';v.style.left='76%'}else{v.style.top='30%';v.style.left='58%'}room.append(v);setTimeout(()=>v.remove(),35000)}
 
 function airdrop(){if(room.querySelector('.airdrop'))return;const crate=object('airdrop','打开小空投箱','✚');crate.onclick=()=>{if(available('airdrop').length)openSlot('airdrop');else{sheet('一个小空投');content.append(element('div','card-art','🍃'))}crate.remove()};setTimeout(()=>crate.remove(),90000)}
-setInterval(()=>{if(document.hidden)return;visitor();if(random()<.17)airdrop();if(random()<.12&&!cupDown){cupDown=true;cupGraphic?.classList.add('cup-fallen');document.querySelector('.mobile-cup')?.classList.add('cup-fallen')}},30000);
+setInterval(()=>{if(document.hidden)return;visitor();if(random()<.17)airdrop();if(random()<.12&&!cupDown){cupDown=true;cupGraphic?.classList.add('cup-fallen');document.querySelector('.mobile-cup')?.classList.add('cup-fallen')}},90000);
 setTimeout(visitor,8000);
 function penguinMoment(){if(document.hidden||room.classList.contains('sleeping'))return;const moves=['penguin-blink','penguin-wave','penguin-hop'];const move=moves[Math.floor(random()*moves.length)];gugu.classList.remove(...moves);void gugu.offsetWidth;gugu.classList.add(move);setTimeout(()=>gugu.classList.remove(move),move==='penguin-hop'?1200:2200)}
 setTimeout(penguinMoment,18000+random()*18000);setInterval(()=>{if(random()<.7)penguinMoment()},55000);
