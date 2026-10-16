@@ -4,7 +4,7 @@ const phrases={morning:'早晨，光慢慢落进来',day:'午后，窗边暖暖�
 function phaseAt(h){return h>=5&&h<11?'morning':h>=11&&h<17?'day':h>=17&&h<22?'evening':'night'}
 function time(){let phase=phaseAt(new Date().getHours());document.body.dataset.phase=phase;document.querySelector('#period').textContent=phrases[phase]}
 time();setInterval(time,60000);
-function save(){try{localStorage.setItem(key,JSON.stringify(positions))}catch{}}
+function save(){const bounds=room.getBoundingClientRect();document.querySelectorAll('.movable').forEach(el=>{positions[el.dataset.item]={x:el.offsetLeft/bounds.width*100,y:el.offsetTop/bounds.height*100}});try{localStorage.setItem(key,JSON.stringify(positions))}catch{}}
 const clamp=(v,max)=>Math.min(Math.max(v,0),max);
 function move(el,x,y){const b=room.getBoundingClientRect();x=clamp(x,100-el.offsetWidth/b.width*100);y=clamp(y,100-el.offsetHeight/b.height*100);el.style.left=x+'%';el.style.top=y+'%';positions[el.dataset.item]={x,y}}
 function apply(){document.querySelectorAll('.movable').forEach(el=>{const p=positions[el.dataset.item];if(p&&Number.isFinite(p.x)&&Number.isFinite(p.y))move(el,p.x,p.y)})}
