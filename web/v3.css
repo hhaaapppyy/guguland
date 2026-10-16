@@ -19,3 +19,9 @@ body{overflow:hidden;background:#dad1be}body>header{position:fixed;inset:0 0 aut
 @keyframes penguin-wave{0%,100%{transform:rotate(0)}45%{transform:rotate(-12deg) translateY(-4px)}75%{transform:rotate(6deg)}}
 @keyframes penguin-wing{0%,100%{transform:rotate(0)}45%{transform:rotate(-18deg) translateY(-4px)}75%{transform:rotate(8deg)}}\n@keyframes penguin-hop{0%,100%{transform:translateY(0)}35%{transform:translateY(-13px) rotate(-2deg)}70%{transform:translateY(0) rotate(2deg)}}
 @keyframes penguin-blink{0%,100%{transform:scaleY(1)}50%{transform:scaleY(.58)}}
+
+.outfit{transform-origin:50% 18%;}
+.penguin-wave .outfit.scarf{animation:scarf-sway 1.8s ease-in-out}
+.penguin-hop .outfit{animation:outfit-hop 1.2s ease-in-out}
+@keyframes scarf-sway{0%,100%{transform:rotate(0)}45%{transform:rotate(-7deg) translateY(-2px)}75%{transform:rotate(5deg)}}
+@keyframes outfit-hop{0%,100%{transform:translateY(0)}35%{transform:translateY(-8px)}70%{transform:translateY(0)}}
