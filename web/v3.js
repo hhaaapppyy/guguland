@@ -11,14 +11,6 @@ function note(text,parent=content){parent.append(element('p','small-note',text))
 const indicator=element('span','ambient-indicator');room.append(indicator);
 const wash=element('div','wall-wash');room.append(wash);wash.style.background=local.get('wall','transparent');
 const dock=element('nav','dock');dock.setAttribute('aria-label','房间小物');room.append(dock);
-const userVase=object('vase vase-user','可以自己照料的小花瓶','<span class="vase-body"><span class="vase-flower"></span></span>');
-const giftVase=object('vase vase-gift','只能由投递者放花的花瓶','<span class="vase-body"><span class="vase-flower"></span></span>');
-userVase.style.left='12.5%';userVase.style.top='42.1%';giftVase.style.left=(76+random()*12)+'%';giftVase.style.top=(26+random()*16)+'%';
-function setUserFlower(flower){const bloom=userVase.querySelector('.vase-flower');bloom.innerHTML=flower?'<span class="bouquet-row first"><span class="single-flower">'+flower+'</span></span><span class="bouquet-row second"><span class="single-flower">'+flower+'</span><span class="single-flower">'+flower+'</span></span>':'';userVase.classList.toggle('has-flower',Boolean(flower));local.set('vase-flower',flower);if(flower){userVase.classList.remove('inserting');void userVase.offsetWidth;userVase.classList.add('inserting')}}
-function chooseUserFlower(){sheet('照料小花瓶');note('选一枝喜欢的花，咕咕会把它轻轻插进去。');const choices=element('div','flower-choices');for(const [flower,label]of [['🌷','郁金香'],['🌼','小雏菊'],['🌻','向日葵'],['🌸','樱花枝']]){const b=button(flower+' '+label,()=>{setUserFlower(flower);panel.close()},'flower-choice');b.setAttribute('aria-label',label);choices.append(b)}content.append(choices);if(local.get('vase-flower',''))content.append(button('取走这枝花',()=>{setUserFlower('');panel.close()},'archive-link'))}
-userVase.onclick=chooseUserFlower;
-const savedFlower=local.get('vase-flower','');if(savedFlower)setUserFlower(savedFlower);
-giftVase.onclick=()=>openSlot('vase');
 const bed=object('bed','小床，盖上或掀开被子','<svg viewBox="0 0 240 160"><ellipse cx="125" cy="145" rx="110" ry="12" fill="#725d4722"/><path d="M15 58v86m211-86v86" stroke="#947b60" stroke-width="12"/><rect x="10" y="40" width="220" height="88" rx="16" fill="#b59672"/><rect x="18" y="48" width="205" height="68" rx="15" fill="#e5d5b5"/><rect class="pillow" x="26" y="55" width="66" height="43" rx="14" fill="#f1e7d2"/><g class="blanket"><path d="M91 59h130v62H91Z" fill="#9fa98c"/><path d="M91 61h130v15H91" fill="#b8c0a4"/><path d="M109 80v40m24-40v40m24-40v40m24-40v40m24-40v40" stroke="#b5bc9f" stroke-width="2"/></g></svg>');
 const lamp=object('lamp-button','开关小夜灯','');
 function cover(on){isSleeping=on;bed.classList.toggle('covered',on);room.classList.toggle('sleeping',on);gugu.querySelector('.sleep-blanket')?.remove();if(on)gugu.append(element('div','sleep-blanket'));local.set('covered',on);if(on)stopMusic()}
