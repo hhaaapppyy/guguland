@@ -24,8 +24,8 @@ export function cloudStore(env,fetcher=fetch){
   async list(prefix){let result=[];for(let offset=0;;offset+=500){const r=await call(table+'?key=like.'+encodeURIComponent(prefix+'*')+'&select=value&order=key&limit=500&offset='+offset);const page=await r.json();result.push(...page.map(x=>x.value));if(page.length<500)return result}},
   async delete(key){if(key.startsWith('media/'))await store.removeObject(key);await call(table+'?key=eq.'+encodeURIComponent(key),{method:'DELETE'})},
   async removeObject(path){await call('/storage/v1/object/gugu-media',{method:'DELETE',headers:{'Content-Type':'application/json'},body:JSON.stringify({prefixes:[path]})})},
-  async signUpload(path){const r=await call('/storage/v1/object/upload/sign/gugu-media/'+path,{method:'POST',headers:{'Content-Type':'application/json'},body:'{}'});const data=await r.json();return base+'/storage/v1'+data.url},
-  async signRead(path){const r=await call('/storage/v1/object/sign/gugu-media/'+path,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({expiresIn:3600})});return base+'/storage/v1'+(await r.json()).signedURL},
+  async signUpload(path){const r=await call('/storage/v1/object/upload/sign/gugu-media/'+path,{method:'POST',headers:{'Content-Type':'application/json'},body:'{}'});const data=await r.json();return new URL(data.url,base+'/storage/v1/').toString()},
+  async signRead(path){const r=await call('/storage/v1/object/sign/gugu-media/'+path,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({expiresIn:3600})});const data=await r.json();return new URL(data.signedURL,base+'/storage/v1/').toString()},
   async readUpload(path){const r=await call('/storage/v1/object/authenticated/gugu-media/'+path);const reader=r.body.getReader();let size=0;const parts=[];while(true){const {value,done}=await reader.read();if(done)break;size+=value.length;if(size>12582912){await reader.cancel();throw Error('文件超过 12 MB')}parts.push(value)}return Buffer.concat(parts)}
  };
  return store;
