@@ -14,7 +14,8 @@ export async function api(request,store,env={}){const url=new URL(request.url),p
   try{
     if(!['GET','HEAD'].includes(method)&&request.headers.get('Origin')!==url.origin)return json({error:'请从本站投递页操作'},403);
     if(path==='/api/room'&&method==='GET'){
-      const entries=(await store.list('entries/')).sort((a,b)=>b.createdAt.localeCompare(a.createdAt));const settings=await store.get('settings')||{};const signals=(await store.list('signals/')).filter(item=>Date.now()-Number(item.createdAt)<15000);
+      const [rawEntries,settingsValue,rawSignals]=await Promise.all([store.list('entries/'),store.get('settings'),store.list('signals/')]);
+      const entries=rawEntries.sort((a,b)=>b.createdAt.localeCompare(a.createdAt));const settings=settingsValue||{};const signals=rawSignals.filter(item=>Date.now()-Number(item.createdAt)<15000);
       return json({entries:entries.map(({createdAt,...entry})=>entry),birthday:settings.birthday||'',signals});
     }
     if(path.startsWith('/api/media/')&&method==='GET'){
