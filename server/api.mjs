@@ -5,7 +5,7 @@ const hex=b=>Array.from(new Uint8Array(b),n=>n.toString(16).padStart(2,'0')).joi
 const equal=(a,b)=>{if(typeof a!=='string'||typeof b!=='string'||a.length!==b.length)return false;let n=0;for(let i=0;i<a.length;i++)n|=a.charCodeAt(i)^b.charCodeAt(i);return n===0};
 async function hash(password,salt){const key=await crypto.subtle.importKey('raw',enc.encode(password),'PBKDF2',false,['deriveBits']);return hex(await crypto.subtle.deriveBits({name:'PBKDF2',salt:enc.encode(salt),iterations:100000,hash:'SHA-256'},key,256))}
 async function signature(value,secret){const key=await crypto.subtle.importKey('raw',enc.encode(secret),{name:'HMAC',hash:'SHA-256'},false,['sign']);return hex(await crypto.subtle.sign('HMAC',key,enc.encode(value)))}
-const slots=['sill','box','pocket','art','drawer','record','airdrop','tactical'];
+const slots=['sill','box','pocket','art','drawer','record','airdrop','tactical','vase'];
 const phases=['all','morning','day','evening','night'];
 const types=['text','photo','drawing','audio','note','record','meme','egg'];
 async function read(request){const length=Number(request.headers.get('content-length'));if(length>18000000)throw new Error('文件太大，请选择 12 MB 以内的文件');const text=await request.text();if(text.length>18000000)throw new Error('文件太大');try{return JSON.parse(text)}catch{throw new Error('内容格式不正确')}}
@@ -18,7 +18,7 @@ export async function api(request,store,env={}){const url=new URL(request.url),p
       const [entriesResult,settingsResult,signalsResult]=await Promise.allSettled([retry(()=>store.list('entries/')),retry(()=>store.get('settings')),retry(()=>store.list('signals/'))]);
       const rawEntries=entriesResult.status==='fulfilled'?entriesResult.value:[];const settingsValue=settingsResult.status==='fulfilled'?settingsResult.value:null;const rawSignals=signalsResult.status==='fulfilled'?signalsResult.value:[];
       const entries=rawEntries.sort((a,b)=>b.createdAt.localeCompare(a.createdAt));const settings=settingsValue||{};const signals=rawSignals.filter(item=>Date.now()-Number(item.createdAt)<15000);
-      return json({entries:entries.map(({createdAt,...entry})=>entry),birthday:settings.birthday||'',signals});
+      return json({entries:entries.map(({createdAt,...entry})=>entry),birthday:settings.birthday||'',signals,songs:Array.isArray(settings.songs)&&settings.songs.length?settings.songs:[]});
     }
     if(path.startsWith('/api/media/')&&method==='GET'){
       const id=path.split('/').pop();if(!/^[\w-]{20,50}$/.test(id))return json({error:'未找到'},404);
@@ -49,6 +49,11 @@ export async function api(request,store,env={}){const url=new URL(request.url),p
     if(path==='/api/admin/want-you'&&method==='POST'){const id=crypto.randomUUID();await store.put('signals/'+id,{id,text:'想你啦',createdAt:Date.now()});return json({ok:true});}
     if(path==='/api/admin/logout'&&method==='POST')return json({ok:true},200,{'Set-Cookie':`gugu_admin=; Path=/api/admin; HttpOnly; SameSite=Strict; Max-Age=0${secure}`});
     if(path==='/api/admin/entries'&&method==='GET')return json({entries:await store.list('entries/'),settings:await store.get('settings')||{}});
+    if(path==='/api/admin/songs'&&method==='GET')return json({songs:(await store.get('settings')||{}).songs||[]});
+    if(path==='/api/admin/songs'&&method==='PUT'){
+      const body=await read(request);const songs=[...new Set((Array.isArray(body.songs)?body.songs:[]).map(x=>String(x).trim()).filter(Boolean))].slice(0,40);
+      const current=await store.get('settings')||{};await store.put('settings',{...current,songs});return json({songs});
+    }
     if(path==='/api/admin/settings'&&method==='PUT'){
       const {birthday}=await read(request);if(birthday&&!/^(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/.test(birthday))return json({error:'请选择月份和日期'},400);
       if(birthday){const [m,d]=birthday.split('-').map(Number);if(new Date(2000,m-1,d).getMonth()!==m-1)return json({error:'日期不存在'},400)}
