@@ -20,6 +20,10 @@ export async function handle(request,env=process.env,providedStore){
    if(!(await check.json()).authorized)return reply({error:'请先登录投递页'},401);
    const raw=await request.text();if(raw.length>100000)return reply({error:'请通过文件上传入口投递'},413);
    const body=JSON.parse(raw);
+   if(body.slot==='record'){
+    body.type='record';
+    if(!body.title||body.title==='一段声音')body.title=body.song||'未命名唱片';
+   }
    if(path.endsWith('/upload')){
     if(!allowed.test(body.mime)||!Number.isInteger(body.size)||body.size<1||body.size>12582912)return reply({error:'请选择 12 MB 以内的图片或音频'},400);
     const id=crypto.randomUUID(),objectPath='pending/'+id;
