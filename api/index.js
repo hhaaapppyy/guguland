@@ -48,4 +48,15 @@ export async function handle(request,env=process.env,providedStore){
   return await api(request,store,env)||reply({error:'未找到'},404);
  }catch(error){return reply({error:'云端上传失败：'+(error?.message||'请检查 Supabase 初始化和 Vercel 环境变量。')},503)}
 }
-export default async function handler(request){return handle(request)}
+export default async function handler(req,res){
+ try{
+  const origin=`https://${req.headers.host||'guguland-eosin.vercel.app'}`;
+  const url=new URL(req.url||'/api',origin);
+  const chunks=[];for await(const chunk of req)chunks.push(chunk);
+  const body=chunks.length?Buffer.concat(chunks):undefined;
+  const request=new Request(url,{method:req.method||'GET',headers:req.headers,body:['GET','HEAD'].includes(req.method)?undefined:body});
+  const response=await handle(request);
+  res.statusCode=response.status;for(const [key,value] of response.headers)res.setHeader(key,value);
+  res.end(Buffer.from(await response.arrayBuffer()));
+ }catch(error){res.statusCode=500;res.setHeader('Content-Type','application/json; charset=utf-8');res.end(JSON.stringify({error:'API 运行失败：'+(error?.message||'未知错误')}))}
+}
