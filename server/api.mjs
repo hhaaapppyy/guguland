@@ -20,7 +20,9 @@ export async function api(request,store,env={}){const url=new URL(request.url),p
     if(path.startsWith('/api/media/')&&method==='GET'){
       const id=path.split('/').pop();if(!/^[\w-]{20,50}$/.test(id))return json({error:'未找到'},404);
       const media=await store.get('media/'+id);if(!media)return json({error:'未找到'},404);
-      return new Response(Uint8Array.from(atob(media.base64),c=>c.charCodeAt(0)),{headers:{'Content-Type':media.mime,'Cache-Control':'public,max-age=86400','X-Content-Type-Options':'nosniff','Content-Security-Policy':"default-src 'none'; sandbox"}});
+      if(media.objectPath&&typeof store.signRead==='function'){const signed=await store.signRead(media.objectPath);return Response.redirect(signed,302)}
+      if(!media.base64)return json({error:'文件内容暂未就绪'},503);
+      return new Response(Uint8Array.from(atob(media.base64),c=>c.charCodeAt(0)),{headers:{'Content-Type':media.mime,'Cache-Control':'public,max-age=86400,stale-while-revalidate=3600','X-Content-Type-Options':'nosniff','Content-Security-Policy':"default-src 'none'; sandbox"}});
     }
     const auth=await store.get('admin-auth');
     const cookie=request.headers.get('cookie')?.match(/(?:^|;\s*)gugu_admin=([^;]+)/)?.[1]||'';
