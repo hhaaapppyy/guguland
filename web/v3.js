@@ -13,9 +13,9 @@ const wash=element('div','wall-wash');room.append(wash);wash.style.background=lo
 const dock=element('nav','dock');dock.setAttribute('aria-label','房间小物');room.append(dock);
 const userVase=object('vase vase-user','可以自己照料的小花瓶','<span class="vase-body"><span class="vase-flower"></span></span>');
 const giftVase=object('vase vase-gift','只能由投递者放花的花瓶','<span class="vase-body"><span class="vase-flower"></span></span>');
-userVase.style.left=(18+random()*24)+'%';userVase.style.top=(58+random()*20)+'%';giftVase.style.left=(60+random()*22)+'%';giftVase.style.top=(34+random()*24)+'%';
+userVase.style.left=(12+random()*18)+'%';userVase.style.top=(70+random()*10)+'%';giftVase.style.left=(76+random()*12)+'%';giftVase.style.top=(26+random()*16)+'%';
 function setUserFlower(flower){const bloom=userVase.querySelector('.vase-flower');bloom.textContent=flower;userVase.classList.toggle('has-flower',Boolean(flower));local.set('vase-flower',flower);if(flower){userVase.classList.remove('inserting');void userVase.offsetWidth;userVase.classList.add('inserting')}}
-function chooseUserFlower(){sheet('照料小花瓶');note('选一枝喜欢的花，咕咕会把它轻轻插进去。');const choices=element('div','flower-choices');for(const [flower,label]of [['🌷','郁金香'],['🌼','小雏菊'],['🌻','向日葵'],['🌸','樱花枝']]){const b=button(flower,()=>{setUserFlower(flower);panel.close()},'flower-choice');b.setAttribute('aria-label',label);choices.append(b)}content.append(choices);if(local.get('vase-flower',''))content.append(button('取走这枝花',()=>{setUserFlower('');panel.close()},'archive-link'))}
+function chooseUserFlower(){sheet('照料小花瓶');note('选一枝喜欢的花，咕咕会把它轻轻插进去。');const choices=element('div','flower-choices');for(const [flower,label]of [['🌷','郁金香'],['🌼','小雏菊'],['🌻','向日葵'],['🌸','樱花枝']]){const b=button(flower+' '+label,()=>{setUserFlower(flower);panel.close()},'flower-choice');b.setAttribute('aria-label',label);choices.append(b)}content.append(choices);if(local.get('vase-flower',''))content.append(button('取走这枝花',()=>{setUserFlower('');panel.close()},'archive-link'))}
 userVase.onclick=chooseUserFlower;
 const savedFlower=local.get('vase-flower','');if(savedFlower)setUserFlower(savedFlower);
 giftVase.onclick=()=>openSlot('vase');
