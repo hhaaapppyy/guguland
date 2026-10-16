@@ -1,6 +1,6 @@
 // Room actions stay in this browser. Only the initial delivery feed and media are fetched.
 const local={get(k,d){try{return JSON.parse(localStorage.getItem('gugu-'+k))??d}catch{return d}},set(k,v){try{localStorage.setItem('gugu-'+k,JSON.stringify(v))}catch{}}};
-let entries=[],birthday='',feedReady=false,sound=false,audioContext=null,currentAudio=null,musicTimer=null,disc=0,side='A',isSleeping=false;
+let entries=[],birthday='',feedReady=false,songList=[...(window.GUGU_SONGS||[])],sound=false,audioContext=null,currentAudio=null,musicTimer=null,disc=0,side='A',isSleeping=false;
 let player=null;
 const gugu=document.querySelector('.penguin');
 function element(tag,cls,text){const e=document.createElement(tag);if(cls)e.className=cls;if(text)e.textContent=text;return e}
@@ -36,7 +36,7 @@ async function recordSheet(){
  await loadFeed();sheet('为你挑的唱片');
  note('点歌曲卡片里的播放按钮，就能听对应的音频。');
  const records=available('record');
- for(const title of window.GUGU_SONGS){
+ for(const title of songList){
   const match=records.find(e=>String(e.title||'').trim()===title&&e.mime?.startsWith('audio/'));
   const card=element('article','delivery-card record-song');
   const heading=element('h3','',title);card.append(heading);
@@ -44,7 +44,7 @@ async function recordSheet(){
   else note(feedReady?'唱片封面已经放好，等待放入音频。':'正在等待投递内容连接。',card);
   content.append(card);
  }
- for(const entry of records.filter(e=>!window.GUGU_SONGS.includes(e.title)))renderEntry(entry,content);
+ for(const entry of records.filter(e=>!songList.includes(e.title)))renderEntry(entry,content);
 }
 function reactToPenguinClick(){tone(180,.08);if(random()<.65)penguinMoment()}
 gugu.addEventListener('click',reactToPenguinClick);
@@ -78,7 +78,7 @@ function penguinMoment(){if(document.hidden||room.classList.contains('sleeping')
 setTimeout(penguinMoment,18000+random()*18000);setInterval(()=>{if(random()<.7)penguinMoment()},55000);
 const seenSignals=new Set();function showWantYou(signal){if(!signal?.id||seenSignals.has(signal.id))return;seenSignals.add(signal.id);const el=element('div','want-you','想你啦');el.style.left=(8+Math.random()*76)+'%';el.style.top=(14+Math.random()*66)+'%';el.style.setProperty('--tilt',(Math.random()*8-4)+'deg');room.append(el);setTimeout(()=>el.remove(),10000);setTimeout(()=>seenSignals.delete(signal.id),20000)}async function pollSignals(){try{const response=await fetch('/api/room',{cache:'no-store'});if(response.ok){const data=await response.json();for(const signal of data.signals||[])showWantYou(signal)}}catch{}}
 setTimeout(pollSignals,5000);setInterval(()=>{if(!document.hidden)pollSignals()},5000);
-async function loadFeed(attempt=0){try{const response=await fetch('/api/room',{cache:'no-store'});if(!response.ok)throw Error();const data=await response.json();entries=data.entries;birthday=data.birthday;feedReady=true;const latest=available('art').find(e=>e.mime?.startsWith('image/'));if(latest){const img=element('img','art-image');img.src='/api/media/'+latest.mediaId;img.alt=latest.title||'放在墙上的画';art.append(img)}const now=new Date(),md=String(now.getMonth()+1).padStart(2,'0')+'-'+String(now.getDate()).padStart(2,'0');if(birthday===md){const cake=object('cake','桌上的小蛋糕','🧁');cake.onclick=()=>tone(523,.2)}}catch{if(attempt<4){setTimeout(()=>loadFeed(attempt+1),1500*(attempt+1));return}const s=element('span','read-status','投递内容暂未连接，房间仍可以使用。');room.append(s)}}loadFeed();
+async function loadFeed(attempt=0){try{const response=await fetch('/api/room',{cache:'no-store'});if(!response.ok)throw Error();const data=await response.json();entries=data.entries;birthday=data.birthday;if(Array.isArray(data.songs)&&data.songs.length)songList=data.songs;feedReady=true;const latest=available('art').find(e=>e.mime?.startsWith('image/'));if(latest){const img=element('img','art-image');img.src='/api/media/'+latest.mediaId;img.alt=latest.title||'放在墙上的画';art.append(img)}const now=new Date(),md=String(now.getMonth()+1).padStart(2,'0')+'-'+String(now.getDate()).padStart(2,'0');if(birthday===md){const cake=object('cake','桌上的小蛋糕','🧁');cake.onclick=()=>tone(523,.2)}}catch{if(attempt<4){setTimeout(()=>loadFeed(attempt+1),1500*(attempt+1));return}const s=element('span','read-status','投递内容暂未连接，房间仍可以使用。');room.append(s)}}loadFeed();
 panel.addEventListener('close',()=>{});
 document.addEventListener('visibilitychange',()=>{if(document.hidden)stopMusic()});
 
