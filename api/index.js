@@ -48,4 +48,4 @@ export async function handle(request,env=process.env,providedStore){
   return await api(request,store,env)||reply({error:'未找到'},404);
  }catch(error){return reply({error:'云端上传失败：'+(error?.message||'请检查 Supabase 初始化和 Vercel 环境变量。')},503)}
 }
-export default {fetch:request=>handle(request)};
+export default async function handler(request){return handle(request)}
