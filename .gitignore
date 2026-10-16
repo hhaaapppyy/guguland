@@ -1,0 +1,10 @@
+.local-data/
+.env
+.env.*
+!.env.example
+.vercel/
+dist/
+.dev.vars
+node_modules/
+*.zip
+*.tar.gz
