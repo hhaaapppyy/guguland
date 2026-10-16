@@ -63,7 +63,7 @@ export async function api(request,store,env={}){const url=new URL(request.url),p
       const body=await read(request);if(!slots.includes(body.slot)||!phases.includes(body.phase)||!types.includes(body.type))return json({error:'请选择有效落点和类型'},400);
       const text=String(body.text||'').slice(0,3000),title=String(body.title||'').slice(0,100);
       if(!text&&!body.media)return json({error:'放一点文字或文件再投递'},400);
-      let mediaId=null,mime=null;
+      let mediaId=null,mime=null,mediaUrl=null;
       if(body.media){
         const match=/^data:(image\/(?:png|jpeg|webp)|audio\/(?:mpeg|mp4|wav|x-wav|ogg|webm))(?:;codecs=[\w.-]+)?;base64,([A-Za-z0-9+/=]+)$/.exec(body.media);
         if(!match||match[2].length>16777216)return json({error:'仅支持 PNG/JPG/WebP 图片和常见音频，最大 12 MB'},400);
@@ -72,9 +72,9 @@ export async function api(request,store,env={}){const url=new URL(request.url),p
         mime=match[1];if(mime==='image/png'&&!bytes.startsWith('\x89PNG'))return json({error:'PNG 格式错误'},400);
         if(mime==='image/jpeg'&&!bytes.startsWith('\xff\xd8'))return json({error:'JPEG 格式错误'},400);
         if(mime==='image/webp'&&!(bytes.startsWith('RIFF')&&bytes.slice(8,12)==='WEBP'))return json({error:'WebP 格式错误'},400);
-        mediaId=crypto.randomUUID();await store.put('media/'+mediaId,{mime,base64:match[2]});
+        mediaId=crypto.randomUUID();await store.put('media/'+mediaId,{mime,base64:match[2]});if(typeof store.signRead==='function')mediaUrl=await store.signRead('media/'+mediaId);
       }
-      const id=crypto.randomUUID();const item={id,title,text,slot:body.slot,phase:body.phase,type:body.type,mediaId,mime,createdAt:new Date().toISOString()};
+      const id=crypto.randomUUID();const item={id,title,text,slot:body.slot,phase:body.phase,type:body.type,mediaId,mime,mediaUrl,createdAt:new Date().toISOString()};
       await store.put('entries/'+id,item);return json({ok:true,item},201);
     }
     if(path.startsWith('/api/admin/entries/')&&method==='DELETE'){
