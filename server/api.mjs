@@ -14,8 +14,8 @@ export async function api(request,store,env={}){const url=new URL(request.url),p
   try{
     if(!['GET','HEAD'].includes(method)&&request.headers.get('Origin')!==url.origin)return json({error:'请从本站投递页操作'},403);
     if(path==='/api/room'&&method==='GET'){
-      const entries=(await store.list('entries/')).sort((a,b)=>b.createdAt.localeCompare(a.createdAt));const settings=await store.get('settings')||{};
-      return json({entries:entries.map(({createdAt,...entry})=>entry),birthday:settings.birthday||''});
+      const entries=(await store.list('entries/')).sort((a,b)=>b.createdAt.localeCompare(a.createdAt));const settings=await store.get('settings')||{};const signals=(await store.list('signals/')).filter(item=>Date.now()-Number(item.createdAt)<15000);
+      return json({entries:entries.map(({createdAt,...entry})=>entry),birthday:settings.birthday||'',signals});
     }
     if(path.startsWith('/api/media/')&&method==='GET'){
       const id=path.split('/').pop();if(!/^[\w-]{20,50}$/.test(id))return json({error:'未找到'},404);
@@ -41,6 +41,7 @@ export async function api(request,store,env={}){const url=new URL(request.url),p
       const exp=String(Date.now()+8*3600000);return json({ok:true},200,{'Set-Cookie':`gugu_admin=${exp}.${await signature(exp,auth.sessionKey)}; Path=/api/admin; HttpOnly; SameSite=Strict; Max-Age=28800${secure}`});
     }
     if(!authorized)return json({error:'请先登录投递页'},401);
+    if(path==='/api/admin/want-you'&&method==='POST'){const id=crypto.randomUUID();await store.put('signals/'+id,{id,text:'想你啦',createdAt:Date.now()});return json({ok:true});}
     if(path==='/api/admin/logout'&&method==='POST')return json({ok:true},200,{'Set-Cookie':`gugu_admin=; Path=/api/admin; HttpOnly; SameSite=Strict; Max-Age=0${secure}`});
     if(path==='/api/admin/entries'&&method==='GET')return json({entries:await store.list('entries/'),settings:await store.get('settings')||{}});
     if(path==='/api/admin/settings'&&method==='PUT'){
@@ -74,4 +75,5 @@ export async function api(request,store,env={}){const url=new URL(request.url),p
     return json({error:'接口不存在'},404);
   }catch(error){return json({error:error.message||'暂时无法保存，请稍后重试'},400)}
 }
+
 
