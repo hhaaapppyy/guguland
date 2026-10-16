@@ -64,4 +64,4 @@ body{overflow:hidden;background:#dad1be}body>header{position:fixed;inset:0 0 aut
 .cat,.dog{touch-action:none;-webkit-user-drag:none;-webkit-tap-highlight-color:transparent}
 .cat.pet-dragging,.dog.pet-dragging{transition:none!important;animation:none!important;transform:none!important;filter:none!important;cursor:grabbing;z-index:20}
 /* Keep each 32px ruled line aligned with a text baseline. */
-.notebook{padding:4px 14px 12px!important;line-height:32px!important;font-size:15px!important;background:repeating-linear-gradient(to bottom,#fffdf8 0,#fffdf8 27px,#d9cfbd 28px,#fffdf8 29px,#fffdf8 32px)!important;background-position:0 0!important;}
+.notebook{padding:2px 14px 12px!important;line-height:32px!important;font-size:15px!important;background:repeating-linear-gradient(to bottom,#fffdf8 0,#fffdf8 27px,#d9cfbd 28px,#fffdf8 29px,#fffdf8 32px)!important;background-position:0 0!important;}
