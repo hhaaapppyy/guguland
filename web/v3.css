@@ -38,3 +38,7 @@ body{overflow:hidden;background:#dad1be}body>header{position:fixed;inset:0 0 aut
 .cat:focus-visible,.dog:focus-visible{outline:2px solid #b8a17b;outline-offset:3px;border-radius:35%;filter:drop-shadow(0 0 4px #eadcc3)}
 .cat.pet-home,.dog.pet-home{left:var(--pet-x);top:var(--pet-y)}
 .cat.pet-walk,.dog.pet-walk{z-index:6}
+
+/* A tap sends pets to a clearly different spot without a long wait. */
+.cat,.dog{transition:left .9s cubic-bezier(.2,.75,.25,1),top .9s cubic-bezier(.2,.75,.25,1),transform .55s ease,filter .55s ease}
+.cat.pet-walk,.dog.pet-walk{transition:left .85s cubic-bezier(.2,.75,.25,1),top .85s cubic-bezier(.2,.75,.25,1),transform .55s ease,filter .55s ease;animation:pet-step .35s ease-in-out 3}
