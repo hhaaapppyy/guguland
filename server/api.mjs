@@ -15,7 +15,7 @@ export async function api(request,store,env={}){const url=new URL(request.url),p
     if(!['GET','HEAD'].includes(method)&&request.headers.get('Origin')!==url.origin)return json({error:'请从本站投递页操作'},403);
     if(path==='/api/room'&&method==='GET'){
       const retry=async task=>{let error;for(let attempt=0;attempt<3;attempt++){try{return await task()}catch(next){error=next;if(attempt<2)await new Promise(resolve=>setTimeout(resolve,150*(attempt+1)))}}throw error};
-      const [rawEntries,settingsValue,rawSignals]=await Promise.all([retry(()=>store.list('entries/')),retry(()=>store.get('settings')),retry(()=>store.list('signals/'))]);
+      const [rawEntries,settingsValue,rawSignals]=await Promise.all([retry(()=>store.list('entries/')),retry(()=>store.get('settings')).catch(()=>null),retry(()=>store.list('signals/')).catch(()=>[])]);
       const entries=rawEntries.sort((a,b)=>b.createdAt.localeCompare(a.createdAt));const settings=settingsValue||{};const signals=rawSignals.filter(item=>Date.now()-Number(item.createdAt)<15000);
       return json({entries:entries.map(({createdAt,...entry})=>entry),birthday:settings.birthday||'',signals});
     }
