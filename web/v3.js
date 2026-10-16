@@ -32,6 +32,7 @@ function stopMusic(){clearInterval(musicTimer);musicTimer=null;if(currentAudio){
 const soundButton=button('声音 关',()=>{sound=!sound;soundButton.textContent=sound?'声音 开':'声音 关';soundButton.setAttribute('aria-pressed',sound);if(!sound){stopMusic();document.querySelectorAll('audio').forEach(a=>a.pause());indicator.textContent=''}else tone(390,.1)},'sound-toggle');soundButton.setAttribute('aria-pressed','false');
 let musicButton;musicButton=button('音乐 播放',()=>{if(!currentAudio)return;if(currentAudio.paused)currentAudio.play().catch(()=>{});else currentAudio.pause()},'sound-toggle');
 async function recordSheet(){
+ if(currentAudio&&currentAudio.parentElement!==room){currentAudio.style.display='none';room.append(currentAudio)}
  await loadFeed();sheet('为你挑的唱片');
  note('点歌曲卡片里的播放按钮，就能听对应的音频。');
  const records=available('record');
