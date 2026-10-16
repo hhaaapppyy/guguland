@@ -1,1 +1,14 @@
-{"name":"gugu-little-room","version":"3.0.0","private":true,"type":"module","scripts":{"start":"node server/local.mjs","build":"node build.mjs"}}
+{
+  "name": "gugu-little-room",
+  "version": "3.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node server/local.mjs",
+    "build": "node build.mjs",
+    "build:vercel": "node build-vercel.mjs"
+  },
+  "engines": {
+    "node": "22.x"
+  }
+}

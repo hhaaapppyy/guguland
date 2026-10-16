@@ -6,7 +6,7 @@
 
 此仓库保存网站源码。上传 GitHub 不等于网站已上线。
 
-当前后端支持本地 Node.js，以及 Cloudflare Worker + R2。**Vercel 后端和持久化存储适配尚未完成，请勿直接使用当前 build 命令在 Vercel 部署。** 当前 build 产物是 Worker，不是 Next.js 网站。
+当前支持 Vercel + Supabase、本地 Node.js、Cloudflare Worker + R2。Vercel 配置已包含在仓库中。需要先运行 `supabase/setup.sql` 并配置服务器环境变量，才能使用云端投递。参见 [Vercel 部署说明](VERCEL.md)。
 
 ## 本地打开
 
