@@ -30,12 +30,12 @@ function bubbleSheet(){sheet('一张泡泡纸');const grid=element('div','bubble
 function tone(freq,duration=.15){if(!sound)return;try{audioContext??=new AudioContext();audioContext.resume();const osc=audioContext.createOscillator(),gain=audioContext.createGain();osc.type='sine';osc.frequency.value=freq;gain.gain.setValueAtTime(.025,audioContext.currentTime);gain.gain.exponentialRampToValueAtTime(.001,audioContext.currentTime+duration);osc.connect(gain).connect(audioContext.destination);osc.start();osc.stop(audioContext.currentTime+duration)}catch{}}
 function stopMusic(){clearInterval(musicTimer);musicTimer=null;if(currentAudio){currentAudio.pause();currentAudio=null}player?.classList.remove('playing')}
 const soundButton=button('声音 关',()=>{sound=!sound;soundButton.textContent=sound?'声音 开':'声音 关';soundButton.setAttribute('aria-pressed',sound);if(!sound){stopMusic();document.querySelectorAll('audio').forEach(a=>a.pause());indicator.textContent=''}else tone(390,.1)},'sound-toggle');soundButton.setAttribute('aria-pressed','false');
-function recordSheet(){
- stopMusic();sheet('为你挑的唱片');
+async function recordSheet(){
+ stopMusic();await loadFeed();sheet('为你挑的唱片');
  note('点歌曲卡片里的播放按钮，就能听对应的音频。');
  const records=available('record');
  for(const title of window.GUGU_SONGS){
-  const match=records.find(e=>e.title===title&&e.mime?.startsWith('audio/'));
+  const match=records.find(e=>String(e.title||'').trim()===title&&e.mime?.startsWith('audio/'));
   const card=element('article','delivery-card record-song');
   const heading=element('h3','',title);card.append(heading);
   if(match){renderEntry(match,card,true);heading.setAttribute('role','button');heading.tabIndex=0;const play=()=>{const audio=card.querySelector('audio');if(audio)audio.paused?audio.play():audio.pause()};heading.onclick=play;heading.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();play()}}}
@@ -65,7 +65,7 @@ weather(['clear','rain','snow','fog'][Math.floor(random()*4)]);setInterval(()=>w
 function visitor(){const v=element('span','visitor');v.setAttribute('aria-hidden','true');const hedgehog=random()>.5;v.innerHTML=hedgehog?'<svg viewBox="0 0 90 60" width="64"><path d="m15 42-3-12 10 1-2-12 12 3 3-13 9 10 10-8 3 12 12-1-4 12q19 22-19 20H15" fill="#a18e72"/><path d="M57 34q14-4 24 12L66 53H49Z" fill="#d6be98"/><circle cx="69" cy="41" r="2" fill="#4c5044"/></svg>':'<svg viewBox="0 0 90 60" width="58"><ellipse cx="40" cy="39" rx="25" ry="16" fill="#a5afa2"/><circle cx="62" cy="22" r="14" fill="#adb6a7"/><path d="m73 20 13 5-14 3M18 38 2 34l9 12" fill="#bba17f"/><circle cx="65" cy="20" r="2" fill="#414b41"/><path d="m36 32 16 12-25 1" fill="#8b998d"/><path d="m33 53-3 5m17-5 3 5" stroke="#8f7a5e" stroke-width="2"/></svg>';if(hedgehog){v.style.top='83%';v.style.left='18%'}room.append(v);setTimeout(()=>v.remove(),35000)}
 function airdrop(){if(room.querySelector('.airdrop'))return;const crate=object('airdrop','打开小空投箱','✚');crate.onclick=()=>{if(available('airdrop').length)openSlot('airdrop');else{sheet('一个小空投');content.append(element('div','card-art','🍃'))}crate.remove()};setTimeout(()=>crate.remove(),90000)}
 setInterval(()=>{if(document.hidden)return;if(random()<.25)visitor();if(random()<.17)airdrop();if(random()<.12&&!cupDown){cupDown=true;cupGraphic?.classList.add('cup-fallen');document.querySelector('.mobile-cup')?.classList.add('cup-fallen')}},45000);
-async function loadFeed(){try{const response=await fetch('/api/room');if(!response.ok)throw Error();const data=await response.json();entries=data.entries;birthday=data.birthday;feedReady=true;const latest=available('art').find(e=>e.mime?.startsWith('image/'));if(latest){const img=element('img','art-image');img.src='/api/media/'+latest.mediaId;img.alt=latest.title||'放在墙上的画';art.append(img)}const now=new Date(),md=String(now.getMonth()+1).padStart(2,'0')+'-'+String(now.getDate()).padStart(2,'0');if(birthday===md){const cake=object('cake','桌上的小蛋糕','🧁');cake.onclick=()=>tone(523,.2)}}catch{const s=element('span','read-status','投递内容暂未连接，房间仍可以使用。');room.append(s)}}loadFeed();
+async function loadFeed(){try{const response=await fetch('/api/room',{cache:'no-store'});if(!response.ok)throw Error();const data=await response.json();entries=data.entries;birthday=data.birthday;feedReady=true;const latest=available('art').find(e=>e.mime?.startsWith('image/'));if(latest){const img=element('img','art-image');img.src='/api/media/'+latest.mediaId;img.alt=latest.title||'放在墙上的画';art.append(img)}const now=new Date(),md=String(now.getMonth()+1).padStart(2,'0')+'-'+String(now.getDate()).padStart(2,'0');if(birthday===md){const cake=object('cake','桌上的小蛋糕','🧁');cake.onclick=()=>tone(523,.2)}}catch{const s=element('span','read-status','投递内容暂未连接，房间仍可以使用。');room.append(s)}}loadFeed();
 panel.addEventListener('close',()=>{document.querySelectorAll('#panel audio').forEach(a=>a.pause());if(currentAudio&&content.contains(currentAudio)){currentAudio=null;player?.classList.remove('playing')}});
 document.addEventListener('visibilitychange',()=>{if(document.hidden)stopMusic()});
 
@@ -76,3 +76,4 @@ room.addEventListener('pointermove',event=>{if(!gaze)return;const box=document.q
 function dogGift(){if(room.querySelector('.dog-gift'))return;const dog=document.querySelector('.dog'),gift=button('✉',()=>{openSlot('box');gift.remove()},'dog-gift');gift.setAttribute('aria-label','小狗叼来的小东西');gift.style.left=(dog.offsetLeft/room.clientWidth*100+2)+'%';gift.style.top=(dog.offsetTop/room.clientHeight*100+8)+'%';room.append(gift);setTimeout(()=>gift.remove(),45000)}
 setInterval(()=>{if(!document.hidden&&random()<.12)dogGift()},65000);
 const steam=document.querySelector('.steam');if(steam)setTimeout(()=>{steam.style.transition='opacity 30s';steam.style.animation='none';steam.style.opacity='0'},60000+random()*120000);
+
