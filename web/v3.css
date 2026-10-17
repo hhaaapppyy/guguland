@@ -76,17 +76,3 @@ body{overflow:hidden;background:#dad1be}body>header{position:fixed;inset:0 0 aut
 .penguin-wave[data-illustrated="true"] .gugu-body{animation:gugu-illustration-wave 1.8s ease-in-out!important}
 @keyframes gugu-illustration-blink{0%,100%{opacity:0}50%{opacity:1}}
 @keyframes gugu-illustration-wave{0%,100%{transform:rotate(0)}40%{transform:rotate(-4deg) translateY(-2px)}72%{transform:rotate(3deg)}}
-
-
-/* Four rotor wings and a gentle independent hover path for Gugu Die's companion. */
-.gugu-companion-anchor,.gugu-companion-anchor *{pointer-events:none}
-.gugu-companion-flight{animation:gugu-butterfly-flight 8s ease-in-out infinite;will-change:transform}
-.gugu-rotor-wing{transform-box:view-box;animation-duration:.34s;animation-timing-function:ease-in-out;animation-iteration-count:infinite;animation-direction:alternate}
-.gugu-rotor-wing-0{transform-origin:185px 146px;animation-name:gugu-wing-left}
-.gugu-rotor-wing-1{transform-origin:211px 147px;animation-name:gugu-wing-right;animation-delay:-.13s}
-.gugu-rotor-wing-2{transform-origin:174px 163px;animation-name:gugu-wing-left;animation-delay:-.18s}
-.gugu-rotor-wing-3{transform-origin:237px 168px;animation-name:gugu-wing-right;animation-delay:-.05s}
-@keyframes gugu-butterfly-flight{0%,100%{transform:translate(0,0) rotate(-4deg)}22%{transform:translate(8px,-9px) rotate(5deg)}48%{transform:translate(-4px,-17px) rotate(-5deg)}74%{transform:translate(-12px,3px) rotate(3deg)}}
-@keyframes gugu-wing-left{from{transform:rotate(-2deg) scaleX(1)}to{transform:rotate(5deg) scaleX(.88)}}
-@keyframes gugu-wing-right{from{transform:rotate(2deg) scaleX(.91)}to{transform:rotate(-5deg) scaleX(1)}}
-@media(prefers-reduced-motion:reduce){.gugu-companion-flight,.gugu-rotor-wing{animation:none}}
