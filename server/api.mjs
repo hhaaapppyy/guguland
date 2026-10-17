@@ -16,9 +16,10 @@ export async function api(request,store,env={}){const url=new URL(request.url),p
     if(path==='/api/room'&&method==='GET'){
       const retry=async task=>{let error;for(let attempt=0;attempt<3;attempt++){try{return await task()}catch(next){error=next;if(attempt<2)await new Promise(resolve=>setTimeout(resolve,150*(attempt+1)))}}throw error};
       const [entriesResult,settingsResult,signalsResult]=await Promise.allSettled([retry(()=>store.list('entries/')),retry(()=>store.get('settings')),retry(()=>store.list('signals/'))]);
+      if(entriesResult.status==='rejected'||settingsResult.status==='rejected')return json({error:'投递内容暂未连接，请稍后再试'},503);
       const rawEntries=entriesResult.status==='fulfilled'?entriesResult.value:[];const settingsValue=settingsResult.status==='fulfilled'?settingsResult.value:null;const rawSignals=signalsResult.status==='fulfilled'?signalsResult.value:[];
       const entries=rawEntries.sort((a,b)=>b.createdAt.localeCompare(a.createdAt));const settings=settingsValue||{};const signals=rawSignals.filter(item=>Date.now()-Number(item.createdAt)<15000);
-      return json({entries:entries.map(({createdAt,...entry})=>entry),birthday:settings.birthday||'',signals,songs:Array.isArray(settings.songs)&&settings.songs.length?settings.songs:[]});
+      return json({entries:entries.map(({createdAt,...entry})=>entry),birthday:settings.birthday||'',signals,songs:Array.isArray(settings.songs)?settings.songs:null});
     }
     if(path.startsWith('/api/media/')&&method==='GET'){
       const id=path.split('/').pop();if(!/^[\w-]{20,50}$/.test(id))return json({error:'未找到'},404);
@@ -49,7 +50,7 @@ export async function api(request,store,env={}){const url=new URL(request.url),p
     if(path==='/api/admin/want-you'&&method==='POST'){const id=crypto.randomUUID();await store.put('signals/'+id,{id,text:'想你啦',createdAt:Date.now()});return json({ok:true});}
     if(path==='/api/admin/logout'&&method==='POST')return json({ok:true},200,{'Set-Cookie':`gugu_admin=; Path=/api/admin; HttpOnly; SameSite=Strict; Max-Age=0${secure}`});
     if(path==='/api/admin/entries'&&method==='GET')return json({entries:await store.list('entries/'),settings:await store.get('settings')||{}});
-    if(path==='/api/admin/songs'&&method==='GET')return json({songs:(await store.get('settings')||{}).songs||[]});
+    if(path==='/api/admin/songs'&&method==='GET'){const settings=await store.get('settings')||{};return json({songs:Array.isArray(settings.songs)?settings.songs:null});}
     if(path==='/api/admin/songs'&&method==='PUT'){
       const body=await read(request);const songs=[...new Set((Array.isArray(body.songs)?body.songs:[]).map(x=>String(x).trim()).filter(Boolean))].slice(0,40);
       const current=await store.get('settings')||{};await store.put('settings',{...current,songs});return json({songs});
@@ -57,7 +58,7 @@ export async function api(request,store,env={}){const url=new URL(request.url),p
     if(path==='/api/admin/settings'&&method==='PUT'){
       const {birthday}=await read(request);if(birthday&&!/^(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/.test(birthday))return json({error:'请选择月份和日期'},400);
       if(birthday){const [m,d]=birthday.split('-').map(Number);if(new Date(2000,m-1,d).getMonth()!==m-1)return json({error:'日期不存在'},400)}
-      await store.put('settings',{birthday:birthday||''});return json({ok:true});
+      const current=await store.get('settings')||{};await store.put('settings',{...current,birthday:birthday||''});return json({ok:true});
     }
     if(path==='/api/admin/entries'&&method==='POST'){
       const body=await read(request);if(!slots.includes(body.slot)||!phases.includes(body.phase)||!types.includes(body.type))return json({error:'请选择有效落点和类型'},400);

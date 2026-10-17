@@ -2,11 +2,12 @@
 const local={get(k,d){try{return JSON.parse(localStorage.getItem('gugu-'+k))??d}catch{return d}},set(k,v){try{localStorage.setItem('gugu-'+k,JSON.stringify(v))}catch{}}};
 let entries=[],birthday='',feedReady=false,songList=[...(window.GUGU_SONGS||[])],sound=false,audioContext=null,currentAudio=null,musicTimer=null,disc=0,side='A',isSleeping=false;
 let player=null;
+let songCatalogConfigured=false;
 const gugu=document.querySelector('.penguin');
 function element(tag,cls,text){const e=document.createElement(tag);if(cls)e.className=cls;if(text)e.textContent=text;return e}
 function button(text,fn,cls='sheet-button'){const b=element('button',cls,text);b.type='button';b.onclick=fn;return b}
 function object(cls,label,html){const b=button('',()=>{},'scene-object '+cls);b.setAttribute('aria-label',label);b.innerHTML=html;room.append(b);return b}
-function sheet(title){if(currentAudio&&currentAudio.parentElement!==room){currentAudio.style.display='none';room.append(currentAudio)}show(title,'');content.querySelector('p').remove();content.querySelector('small').remove();return content}
+function sheet(title){delete content.dataset.view;if(currentAudio&&currentAudio.parentElement!==room){currentAudio.style.display='none';room.append(currentAudio)}show(title,'');content.querySelector('p').remove();content.querySelector('small').remove();return content}
 function note(text,parent=content){parent.append(element('p','small-note',text))}
 const indicator=element('span','ambient-indicator');room.append(indicator);
 const wash=element('div','wall-wash');room.append(wash);wash.style.background=local.get('wall','transparent');
@@ -82,17 +83,34 @@ function makeSongPlayer(audio,entry,card){
  const seek=e=>{if(!audio.duration)return;const rect=track.getBoundingClientRect();audio.currentTime=Math.max(0,Math.min(1,(e.clientX-rect.left)/rect.width))*audio.duration};
  track.addEventListener('click',seek);track.addEventListener('keydown',e=>{if(e.key==='ArrowRight'||e.key==='ArrowLeft'){e.preventDefault();audio.currentTime=Math.max(0,Math.min(audio.duration||0,audio.currentTime+(e.key==='ArrowRight'?5:-5)))}});track.addEventListener('pointerdown',e=>{if(e.pointerType==='touch')seek(e)});
 }
+function playableRecords(){
+ const records=available('record').filter(e=>e.mediaId&&e.mime?.startsWith('audio/'));
+ const ordered=songList.map(title=>records.find(e=>String(e.title||'').trim()===String(title).trim())).filter(Boolean);
+ if(!songCatalogConfigured)for(const entry of records)if(!ordered.some(e=>e.id===entry.id))ordered.push(entry);
+ return ordered;
+}
+function applyRoomFeed(data){
+ if(!Array.isArray(data.entries))return;
+ entries=data.entries;birthday=data.birthday||'';songCatalogConfigured=Array.isArray(data.songs);
+ songList=songCatalogConfigured?[...data.songs]:[...(window.GUGU_SONGS||[])];feedReady=true;
+ const playable=new Set(playableRecords().map(e=>e.id));
+ if(currentAudio?.dataset.entryId){const active=entries.find(e=>e.id===currentAudio.dataset.entryId);if(!active||(active.slot==='record'&&!playable.has(active.id))){const removed=currentAudio;stopMusic();removed.remove()}}
+ if(content.dataset.view==='records'){
+  for(const card of content.querySelectorAll('.record-song'))if(!playable.has(card.dataset.recordId))card.remove();
+  if(!content.querySelector('.record-song')&&!content.querySelector('.record-empty'))content.append(element('p','small-note record-empty','还没有放入唱片。'));
+ }
+}
 async function recordSheet(){
  if(currentAudio&&currentAudio.parentElement!==room){currentAudio.style.display='none';room.append(currentAudio)}
- await loadFeed();sheet('为你挑的唱片');note('点播放键听歌，也可以拖动进度。');
- const records=available('record');
- for(let index=0;index<songList.length;index++){const title=songList[index],match=records.find(e=>String(e.title||'').trim()===title&&e.mime?.startsWith('audio/'));
-  const card=element('article','delivery-card record-song'),heading=element('h3','',title);card.append(heading);
-  if(match){renderEntry(match,card,true);const audio=card.querySelector('audio');if(audio)makeSongPlayer(audio,match,card);heading.setAttribute('role','button');heading.tabIndex=0;const play=()=>{if(audio)audio.paused?audio.play().catch(()=>{}):audio.pause()};heading.onclick=play;heading.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();play()}}}
-  else note(feedReady?'唱片封面已经放好，等待放入音频。':'正在等待投递内容连接。',card);
+ await loadFeed();sheet('为你挑的唱片');content.dataset.view='records';note('点播放键听歌，也可以拖动进度。');
+ const records=playableRecords();
+ for(const entry of records){
+  const card=element('article','delivery-card record-song'),heading=element('h3','',entry.title||'一张唱片');card.dataset.recordId=entry.id;card.append(heading);
+  renderEntry(entry,card,true);const audio=card.querySelector('audio');if(audio)makeSongPlayer(audio,entry,card);
+  heading.setAttribute('role','button');heading.tabIndex=0;const play=()=>{if(audio)audio.paused?audio.play().catch(()=>{}):audio.pause()};heading.onclick=play;heading.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();play()}};
   content.append(card)
  }
- for(const entry of records.filter(e=>!songList.includes(e.title)))renderEntry(entry,content);
+ if(!records.length)content.append(element('p','small-note record-empty',feedReady?'还没有放入唱片。':'正在等待投递内容连接。'));
 }
 function reactToPenguinClick(){tone(180,.08);if(random()<.65)penguinMoment()}
 gugu.addEventListener('click',reactToPenguinClick);
@@ -105,7 +123,7 @@ function isImageBlob(blob,expected){return !!blob&&blob.size>0&&(blob.type.start
 async function readCachedImage(url,id,expected){if(!('caches'in window))return null;try{const cache=await caches.open('gugu-delivery-images-v1'),key=imageCacheKey(url,id),hit=await cache.match(key);if(!hit)return null;const blob=await hit.blob();if(isImageBlob(blob,expected))return blob;await cache.delete(key)}catch{}return null}
 async function fetchAndCacheImage(url,id,expected){let lastError;for(let attempt=0;attempt<3;attempt++){try{const response=await fetch(url);if(!response.ok)throw Error('Image request failed: '+response.status);const type=response.headers.get('content-type')||'';if(type&&!type.toLowerCase().startsWith('image/'))throw Error('Response is not an image');const cacheResponse=response.clone();const blob=await response.blob();if(!isImageBlob(blob,expected))throw Error('Invalid image data');try{if('caches'in window){const cache=await caches.open('gugu-delivery-images-v1');await cache.put(imageCacheKey(url,id),cacheResponse)}}catch{}return blob}catch(error){lastError=error;if(attempt<2)await new Promise(resolve=>setTimeout(resolve,350*(attempt+1)))}}throw lastError||Error('Image unavailable')}
 function setCachedImage(img,url,id,expected){let retrying=false;img.onerror=async()=>{if(retrying)return;retrying=true;img.onerror=null;try{const blob=await fetchAndCacheImage(url,id,expected);img.src=URL.createObjectURL(blob)}catch{}};(async()=>{const cached=await readCachedImage(url,id,expected);if(cached){img.src=URL.createObjectURL(cached);return}img.src=url;img.onload=()=>{img.onload=null;fetchAndCacheImage(url,id,expected).catch(()=>{})}})().catch(()=>{img.src=url})}
-function renderEntry(entry,parent,inside=false){const card=inside?parent:element('article','delivery-card '+entry.type);if(!inside&&entry.title)card.append(element('h3','',entry.title));if(entry.mediaId&&entry.mime?.startsWith('image/')){const img=element('img');img.alt=entry.title||'放在这里的小画';setCachedImage(img,'/api/media/'+encodeURIComponent(entry.mediaId),entry.mediaId,entry.mime);card.append(img)}if(entry.text)card.append(element('p','',entry.text));if(entry.mediaId&&entry.mime?.startsWith('audio/')){const audio=document.createElement('audio');audio.controls=false;audio.loop=true;audio.preload='metadata';audio.setAttribute('aria-label',(entry.title||'这首歌')+' 音频');audio.src=entry.mediaUrl||('/api/media/'+entry.mediaId);audio.onplay=()=>{if(currentAudio&&currentAudio!==audio)currentAudio.pause();sound=true;soundButton.textContent='声音 开';soundButton.setAttribute('aria-pressed','true');musicButton.textContent='音乐 暂停';document.querySelectorAll('audio').forEach(a=>{if(a!==audio)a.pause()});currentAudio=audio;player.classList.add('playing')};audio.onpause=()=>{if(currentAudio===audio){player?.classList.remove('playing');musicButton.textContent='音乐 播放'}};audio.onended=()=>{if(currentAudio===audio)currentAudio=null;player?.classList.remove('playing');musicButton.textContent='音乐 播放'};card.append(audio)}if(!inside)parent.append(card)}
+function renderEntry(entry,parent,inside=false){const card=inside?parent:element('article','delivery-card '+entry.type);if(!inside&&entry.title)card.append(element('h3','',entry.title));if(entry.mediaId&&entry.mime?.startsWith('image/')){const img=element('img');img.alt=entry.title||'放在这里的小画';setCachedImage(img,'/api/media/'+encodeURIComponent(entry.mediaId),entry.mediaId,entry.mime);card.append(img)}if(entry.text)card.append(element('p','',entry.text));if(entry.mediaId&&entry.mime?.startsWith('audio/')){const audio=document.createElement('audio');audio.dataset.entryId=entry.id;audio.controls=false;audio.loop=true;audio.preload='metadata';audio.setAttribute('aria-label',(entry.title||'这首歌')+' 音频');audio.src=entry.mediaUrl||('/api/media/'+entry.mediaId);audio.onplay=()=>{if(currentAudio&&currentAudio!==audio)currentAudio.pause();sound=true;soundButton.textContent='声音 开';soundButton.setAttribute('aria-pressed','true');musicButton.textContent='音乐 暂停';document.querySelectorAll('audio').forEach(a=>{if(a!==audio)a.pause()});currentAudio=audio;player.classList.add('playing')};audio.onpause=()=>{if(currentAudio===audio){player?.classList.remove('playing');musicButton.textContent='音乐 播放'}};audio.onended=()=>{if(currentAudio===audio)currentAudio=null;player?.classList.remove('playing');musicButton.textContent='音乐 播放'};card.append(audio)}if(!inside)parent.append(card)}
 window.openSlot=function(slot){const names={sill:'窗台',box:'小盒子',pocket:'咕咕的口袋',art:'墙上的画',drawer:'抽屉',airdrop:'一个小空投',tactical:'战术桌'};sheet(names[slot]||'小东西');let items=available(slot);if(slot==='drawer'){const paintings=available('art');items=[...items,...paintings.slice(1)]}if(slot==='art')items=available('art').slice(0,1);for(const item of items)renderEntry(item,content);if(!items.length)note(feedReady?'这里暂时空着。':'投递内容暂时没有连接上。');if(slot==='art'&&available('art').length>1)content.append(button('翻翻抽屉',()=>openSlot('drawer'),'archive-link'))};
 const usedPocket=new Set();
 function savePocketKeepsake(item){const kept=local.get('pocket-keepsakes',[]),id=String(item.id||item.mediaId||item.createdAt||item.title||'');if(!id||kept.some(e=>String(e.id)===id))return;kept.push({id,type:item.type,slot:item.slot,title:item.title,text:item.text,mime:item.mime,mediaId:item.mediaId,phase:item.phase,createdAt:item.createdAt});local.set('pocket-keepsakes',kept)}
@@ -136,9 +154,9 @@ setInterval(()=>{if(document.hidden)return;visitor();if(random()<.17)airdrop();i
 setTimeout(visitor,8000);
 function penguinMoment(){if(document.hidden||room.classList.contains('sleeping'))return;const moves=['penguin-blink','penguin-wave','penguin-hop'];const move=moves[Math.floor(random()*moves.length)];gugu.classList.remove(...moves);void gugu.offsetWidth;gugu.classList.add(move);setTimeout(()=>gugu.classList.remove(move),move==='penguin-hop'?1200:2200)}
 setTimeout(penguinMoment,18000+random()*18000);setInterval(()=>{if(random()<.7)penguinMoment()},55000);
-const seenSignals=new Set();function showWantYou(signal){if(!signal?.id||seenSignals.has(signal.id))return;seenSignals.add(signal.id);const el=element('div','want-you','想你啦');el.style.left=(8+Math.random()*76)+'%';el.style.top=(14+Math.random()*66)+'%';el.style.setProperty('--tilt',(Math.random()*8-4)+'deg');room.append(el);setTimeout(()=>el.remove(),10000);setTimeout(()=>seenSignals.delete(signal.id),20000)}async function pollSignals(){try{const response=await fetch('/api/room',{cache:'no-store'});if(response.ok){const data=await response.json();for(const signal of data.signals||[])showWantYou(signal)}}catch{}}
+const seenSignals=new Set();function showWantYou(signal){if(!signal?.id||seenSignals.has(signal.id))return;seenSignals.add(signal.id);const el=element('div','want-you','想你啦');el.style.left=(8+Math.random()*76)+'%';el.style.top=(14+Math.random()*66)+'%';el.style.setProperty('--tilt',(Math.random()*8-4)+'deg');room.append(el);setTimeout(()=>el.remove(),10000);setTimeout(()=>seenSignals.delete(signal.id),20000)}async function pollSignals(){try{const response=await fetch('/api/room',{cache:'no-store'});if(response.ok){const data=await response.json();applyRoomFeed(data);for(const signal of data.signals||[])showWantYou(signal)}}catch{}}
 setTimeout(pollSignals,5000);setInterval(()=>{if(!document.hidden)pollSignals()},5000);
-async function loadFeed(attempt=0){try{const response=await fetch('/api/room',{cache:'no-store'});if(!response.ok)throw Error();const data=await response.json();entries=data.entries;birthday=data.birthday;if(Array.isArray(data.songs))songList=data.songs.length?data.songs:[...(window.GUGU_SONGS||[])];feedReady=true;if(available('vase').length){giftVase.classList.add('has-flower');giftVase.querySelector('.vase-body').textContent='✿'}const latest=available('art').find(e=>e.mime?.startsWith('image/'));if(latest){const img=element('img','art-image');img.alt=latest.title||'放在墙上的画';setCachedImage(img,'/api/media/'+latest.mediaId,latest.mediaId,latest.mime);art.append(img)}const now=new Date(),md=String(now.getMonth()+1).padStart(2,'0')+'-'+String(now.getDate()).padStart(2,'0');if(birthday===md){const cake=object('cake','桌上的小蛋糕','🧁');cake.onclick=()=>tone(523,.2)}}catch{if(attempt<4){setTimeout(()=>loadFeed(attempt+1),1500*(attempt+1));return}const s=element('span','read-status','投递内容暂未连接，房间仍可以使用。');room.append(s)}}loadFeed();
+async function loadFeed(attempt=0){try{const response=await fetch('/api/room',{cache:'no-store'});if(!response.ok)throw Error();const data=await response.json();applyRoomFeed(data);if(available('vase').length){giftVase.classList.add('has-flower');giftVase.querySelector('.vase-body').textContent='✿'}const latest=available('art').find(e=>e.mime?.startsWith('image/'));if(latest){const img=element('img','art-image');img.alt=latest.title||'放在墙上的画';setCachedImage(img,'/api/media/'+latest.mediaId,latest.mediaId,latest.mime);art.append(img)}const now=new Date(),md=String(now.getMonth()+1).padStart(2,'0')+'-'+String(now.getDate()).padStart(2,'0');if(birthday===md){const cake=object('cake','桌上的小蛋糕','🧁');cake.onclick=()=>tone(523,.2)}}catch{if(attempt<4){setTimeout(()=>loadFeed(attempt+1),1500*(attempt+1));return}const s=element('span','read-status','投递内容暂未连接，房间仍可以使用。');room.append(s)}}loadFeed();
 panel.addEventListener('close',()=>{});
 document.addEventListener('visibilitychange',()=>{if(document.hidden)stopMusic()});
 
