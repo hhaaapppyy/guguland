@@ -40,13 +40,14 @@ const illustratedLooks={
  '咕咕本咕':{file:'bengugu-slim',center:351.5,bottom:681,eyes:[[283.5,299],[429.5,299]],skin:['#f9f7ef','#f9f7ef']},
  '毛球':{file:'maoqiu',center:348,eyes:[[281,302],[425,302]],skin:['#f9f4e8','#faf5e9']},
  'qq':{file:'qq-slim',center:358.5,bottom:679,eyes:[[287,297.5],[428.5,297.5]],skin:['#f9f6ec','#faf6ea']},
- '咕咕蝶':{file:'gugudie',center:322,eyes:[[258.5,301],[402.5,301.5]],skin:['#faf8eb','#faf6e8']}
+ '咕咕蝶':{file:'gugudie',center:322,eyes:[[258.5,301],[402.5,301.5]],skin:['#faf8eb','#faf6e8'],fourWings:true}
 };
 
 let selectedLook=local.get('gugu-look','');
 if(!selectedLook)selectedLook=Array.isArray(oldOutfit)?(oldOutfit.includes('hat')?'毛球':oldOutfit.includes('scarf')?'qq':oldOutfit.some(c=>c==='helmet'||c==='pack')?'咕咕蝶':'咕咕本咕'):'咕咕本咕';
 if(selectedLook!=='咕咕本咕'&&!illustratedLooks[selectedLook])selectedLook='咕咕本咕';
 for(const look of Object.values(illustratedLooks)){const preload=new Image();preload.src='gugu-assets/'+look.file+'.webp'}
+const fourWingPreload=new Image();fourWingPreload.src='gugu-assets/butterfly-sage-four.webp';
 function dress(next){
  if(next)selectedLook=next;
  const svg=gugu.querySelector('svg'),look=illustratedLooks[selectedLook];
@@ -54,7 +55,9 @@ function dress(next){
  else{
   const scale=.425,x=120-look.center*scale,y=266-(look.bottom||689)*scale,size=724*scale;
   const lids=look.eyes.map((p,i)=>{const cx=x+p[0]*scale,cy=y+p[1]*scale;return '<g><ellipse cx="'+cx+'" cy="'+cy+'" rx="6.8" ry="9" fill="'+look.skin[i]+'" filter="url(#gugu-lid-soft)"/><path d="M'+(cx-3.7)+' '+cy+'q3.7 2 7.4 0" fill="none" stroke="#272b26" stroke-width="1.4" stroke-linecap="round"/></g>'}).join('');
-  svg.innerHTML='<defs><filter id="gugu-lid-soft" x="-.25" y="-.25" width="1.5" height="1.5"><feGaussianBlur stdDeviation=".5"/></filter></defs><ellipse cx="120" cy="260" rx="89" ry="13" fill="#776349" opacity=".16"/><g class="gugu-body gugu-illustration"><image class="gugu-complete-art" href="gugu-assets/'+look.file+'.webp" x="'+x+'" y="'+y+'" width="'+size+'" height="'+size+'" preserveAspectRatio="xMidYMid meet" pointer-events="none"/><g class="gugu-raster-lids" pointer-events="none">'+lids+'</g></g><ellipse class="belly-hit" cx="120" cy="181" rx="48" ry="47" fill="transparent"/>';
+  const oldCompanionMask=look.fourWings?'<mask id="gugu-old-companion-mask" maskUnits="userSpaceOnUse" x="-100" y="-100" width="500" height="500"><rect x="-100" y="-100" width="500" height="500" fill="white"/><rect x="'+(x+505*scale)+'" y="'+(y+110*scale)+'" width="'+(219*scale)+'" height="'+(230*scale)+'" fill="black"/></mask>':'';
+  const newCompanion=look.fourWings?'<image class="gugu-four-wing-companion" href="gugu-assets/butterfly-sage-four.webp" x="202" y="25" width="74" height="49.333" pointer-events="none" aria-hidden="true"/>':'';
+  svg.innerHTML='<defs><filter id="gugu-lid-soft" x="-.25" y="-.25" width="1.5" height="1.5"><feGaussianBlur stdDeviation=".5"/></filter>'+oldCompanionMask+'</defs><ellipse cx="120" cy="260" rx="89" ry="13" fill="#776349" opacity=".16"/><g class="gugu-body gugu-illustration"><image class="gugu-complete-art" href="gugu-assets/'+look.file+'.webp" x="'+x+'" y="'+y+'" width="'+size+'" height="'+size+'" preserveAspectRatio="xMidYMid meet" pointer-events="none"'+(look.fourWings?' mask="url(#gugu-old-companion-mask)"':'')+'/><g class="gugu-raster-lids" pointer-events="none">'+lids+'</g></g>'+newCompanion+'<ellipse class="belly-hit" cx="120" cy="181" rx="48" ry="47" fill="transparent"/>';
   gugu.dataset.illustrated='true';
   svg.querySelector('image').addEventListener('error',()=>{if(gugu.dataset.look===selectedLook){svg.innerHTML=originalGuguMarkup;gugu.dataset.illustrated='false'}},{once:true});
  }
