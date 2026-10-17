@@ -65,3 +65,14 @@ body{overflow:hidden;background:#dad1be}body>header{position:fixed;inset:0 0 aut
 .cat.pet-dragging,.dog.pet-dragging{transition:none!important;animation:none!important;transform:none!important;filter:none!important;cursor:grabbing;z-index:20}
 /* Keep each 32px ruled line aligned with a text baseline. */
 .notebook{padding:2px 14px 12px!important;line-height:32px!important;font-size:15px!important;background:repeating-linear-gradient(to bottom,#fffdf8 0,#fffdf8 27px,#d9cfbd 28px,#fffdf8 29px,#fffdf8 32px)!important;background-position:0 0!important;}
+
+
+/* Complete illustrated looks use the same draggable/interactive SVG container. */
+.penguin[data-illustrated="true"]>svg{overflow:visible}
+.penguin[data-illustrated="true"] .gugu-body{transform-origin:120px 260px}
+.gugu-raster-lids{opacity:0}
+.penguin-blink[data-illustrated="true"] .gugu-raster-lids{animation:gugu-illustration-blink .22s steps(2) 2}
+.sleeping .penguin[data-illustrated="true"] .gugu-raster-lids{opacity:1;animation:none}
+.penguin-wave[data-illustrated="true"] .gugu-body{animation:gugu-illustration-wave 1.8s ease-in-out!important}
+@keyframes gugu-illustration-blink{0%,100%{opacity:0}50%{opacity:1}}
+@keyframes gugu-illustration-wave{0%,100%{transform:rotate(0)}40%{transform:rotate(-4deg) translateY(-2px)}72%{transform:rotate(3deg)}}
